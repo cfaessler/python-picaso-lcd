@@ -1,7 +1,7 @@
-import Display
+import display
 import time
 import math
-import Colors
+import colors
 
 
 def demo_sine(display):

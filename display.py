@@ -1,5 +1,4 @@
 import serial
-import Commands
 
 
 class Display:
@@ -38,8 +37,14 @@ class Display:
 
     def write_cmd(self, cmd):
         """
-        Writes list of values to the serial port - values are always converted into a word (16bit value, consisting of two bytes: high byte, low byte) even if they would fit into a single byte.
-        The communication protocol is based on exchanging words. Only a few special commands use single byte values, in this case use write_raw_cmd instead
+        Writes list of values to the serial port - values are always converted
+        into a word (16bit value, consisting of two bytes: high byte, low byte)
+        even if they would fit into a single byte.
+
+        The communication protocol is based on exchanging words. Only a few
+        special commands use single byte values, in this case use write_raw_cmd
+        instead
+
         """
         for c in cmd:
             high_byte, low_byte = self._int_to_dword(c)
@@ -61,7 +66,7 @@ class Display:
 
     def gfx_polyline(self, lines, color, closed=False, filled=False):
         """
-        a polyline could be closed or filled, where filled is always closed
+        A polyline could be closed or filled, where filled is always closed.
         """
         cmd = 0x0015
         if closed:
@@ -136,7 +141,6 @@ class Display:
         self.write_cmd([0xFFE5, font])
         self._get_ack(0, 0)
 
-
     def print_string(self, string):
         cmd = [0x00, 0x18]
         for char in string:
@@ -173,6 +177,7 @@ class Display:
         1 = Landscape reverse
         2 = portrait
         3 = portrait reverse
+
         :returns: previous orientation
         """
         self.write_cmd([0xFF9E, value])
