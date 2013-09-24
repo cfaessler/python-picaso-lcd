@@ -1,9 +1,10 @@
 import serial
 
 
-class Display:
+class Display(object):
     def __init__(self, port, baudrate):
         """
+        Initialize the instance of a 4D Systems serial LCD.
 
         :param port: serial port to which the display is connected
         :param baudrate: default 9600 in SPE2 rev 1.1
