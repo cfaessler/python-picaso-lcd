@@ -19,8 +19,10 @@ def int_to_dword(value):
     :rtype: (int, int)
 
     """
-    if value >= (2 << 15):
+    if value >= (1 << 16):
         raise ValueError('Value must be smaller than 2^16')
+    if value < 0:
+        raise ValueError('Value must be positive')
     return value >> 8, value & 0xFF
 
 
@@ -42,11 +44,12 @@ def dword_to_int(high_byte, low_byte):
 
     """
     # TODO input validation could be done using decorator
-    import ipdb; ipdb.set_trace()
-    if not high_byte < (2 << 7):
+    if not high_byte < (1 << 8):
         raise ValueError('high_byte must be smaller than 2^8')
-    if not low_byte < (2 << 7):
+    if not low_byte < (1 << 8):
         raise ValueError('low_byte must be smaller than 2^8')
+    if high_byte < 0 or low_byte < 0:
+        raise ValueError('All arguments must be positive')
     return (high_byte << 8) | low_byte
 
 
