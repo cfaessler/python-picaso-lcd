@@ -1,7 +1,12 @@
+# -*- coding: utf-8 -*-
+from __future__ import print_function, division, absolute_import, unicode_literals
+
 import serial
 
 
 class Display(object):
+    """This class represents a 4D Systems serial LCD."""
+
     def __init__(self, port, baudrate):
         """
         Initialize the instance of a 4D Systems serial LCD.
@@ -18,11 +23,11 @@ class Display(object):
         ack = self.port.read()
         acks = []
         if ord(ack) != 6:
-            print "Error Code: {0}".format(ord(ack))
+            print('Error Code: {0}'.format(ord(ack)))
             raise Exception(ack)
         for arg in expected_values:
             ack = self.port.read()
-            print "value {0}".format(ord(ack))
+            print('value {0}'.format(ord(ack)))
             acks.append(ack)
         return acks
 
@@ -62,6 +67,8 @@ class Display(object):
         self.write_cmd([cmd, x1, y1, x2, y2, color])
         return self._get_ack()
 
+    ### GRAPHICS FUNCTIONS ###
+
     def gfx_triangle(self, vertices, filled=False):
         self.gfx_polyline(vertices, closed=True, filled=filled)
 
@@ -75,7 +82,7 @@ class Display(object):
         if filled:
             cmd = 0x0014
         size = len(lines)
-        print size
+        print(size)
         cmd_list = [cmd, size]
         for point in lines:
             x, y = point
@@ -109,6 +116,7 @@ class Display(object):
         """
         Converts a single int value (< 2**16) into two-byte structure: High byte, Low byte
         """
+        assert value < (2 << 15), 'Value too large (max 2^16)'
         return value >> 8, value & 0xFF
 
     def _dword_to_int(self, high_byte, low_byte):
@@ -119,6 +127,7 @@ class Display(object):
         return min(red, 31) << 11 | min(green, 63) << 5 | min(blue, 31)
 
     def set_pixel(self, x, y, color):
+        """Set the color of the pixel at ``x``/``y`` to ``color``."""
         self.write_cmd([0xFFC1, x, y, color])
         self._get_ack()
 
@@ -162,14 +171,14 @@ class Display(object):
     def set_contrast(self, contrast):
         self.write_cmd([0xFF9C, contrast])
         val = self._get_ack(0, 0)
-        print "turning off, contrast was: {0}".format(val)
+        print('turning off, contrast was: {0}'.format(val))
         self._contrast = self._dword_to_int(val[0], val[1])
 
     def off(self):
         self.set_contrast(0)
 
     def on(self):
-        print "contrast is: {0}".format(self._contrast)
+        print('contrast is: {0}'.format(self._contrast))
         self.set_contrast(self._contrast)
 
     def set_orientation(self, value):

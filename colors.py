@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+from __future__ import print_function, division, absolute_import, unicode_literals
+
 ALICEBLUE = 0xF7DF
 ANTIQUEWHITE = 0xFF5A
 AQUA = 0x07FF
