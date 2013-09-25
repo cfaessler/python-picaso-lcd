@@ -1,4 +1,6 @@
-4D_Display
-==========
+4D Systems PICASO Display Library
+=================================
 
-Python driver for 4D Systems serial displays
+This is a Python library for PICASO based serial LCDs by 4D Systems.
+
+Work in progress.
