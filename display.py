@@ -2,20 +2,22 @@
 from __future__ import print_function, division, absolute_import, unicode_literals
 
 import serial
+import utils
 
 
 class Display(object):
     """This class represents a 4D Systems serial LCD."""
 
-    def __init__(self, port, baudrate):
+    def __init__(self, port, baudrate=9600):
         """
         Initialize the instance of a 4D Systems serial LCD.
 
         :param port: serial port to which the display is connected
+        :type port: str or unicode
         :param baudrate: default 9600 in SPE2 rev 1.1
-        :rtype : Display object
+        :type baudrate: int
+        :rtype: Display instance
         """
-        self._com = port
         self.port = serial.Serial(port, baudrate=baudrate, stopbits=1)
         self._contrast = 15
 
@@ -35,8 +37,8 @@ class Display(object):
         """
         Writes list of bytes to the serial port
 
-        :type self: object
-        :param cmd:
+        :param cmd: Iterable containing numeric bytes.
+        :type cmd: iterable
         """
         for c in cmd:
             self.port.write(chr(c))
@@ -53,7 +55,7 @@ class Display(object):
 
         """
         for c in cmd:
-            high_byte, low_byte = self._int_to_dword(c)
+            high_byte, low_byte = utils.int_to_dword(c)
             self.port.write(chr(high_byte))
             self.port.write(chr(low_byte))
 
@@ -112,20 +114,6 @@ class Display(object):
         self.write_cmd([0xFFCD])
         self._get_ack()
 
-    def _int_to_dword(self, value):
-        """
-        Converts a single int value (< 2**16) into two-byte structure: High byte, Low byte
-        """
-        assert value < (2 << 15), 'Value too large (max 2^16)'
-        return value >> 8, value & 0xFF
-
-    def _dword_to_int(self, high_byte, low_byte):
-        return (ord(high_byte) << 8) | ord(low_byte)
-
-    def to_16bit_color(self, red, green, blue):
-        #Color scheme is 16bit (565). Greater values are truncated --> min()
-        return min(red, 31) << 11 | min(green, 63) << 5 | min(blue, 31)
-
     def set_pixel(self, x, y, color):
         """Set the color of the pixel at ``x``/``y`` to ``color``."""
         self.write_cmd([0xFFC1, x, y, color])
@@ -169,10 +157,12 @@ class Display(object):
         self._get_ack(0, 0)
 
     def set_contrast(self, contrast):
+        """Set the contrast. Note that this has no effect on most LCDs."""
         self.write_cmd([0xFF9C, contrast])
         val = self._get_ack(0, 0)
         print('turning off, contrast was: {0}'.format(val))
-        self._contrast = self._dword_to_int(val[0], val[1])
+        dword = map(ord, val)
+        self._contrast = utils.dword_to_int(*dword)
 
     def off(self):
         self.set_contrast(0)
@@ -196,6 +186,8 @@ class Display(object):
     def get_display_size(self):
         self.write_cmd([0xFFA6, 0])
         x = self._get_ack(0, 0)
+        x_dword = map(ord, [x[0], x[1]])
         self.write_cmd([0xFFA6, 1])
         y = self._get_ack(0, 0)
-        return self._dword_to_int(x[0], x[1]), self._dword_to_int(y[0], y[1])
+        y_dword = map(ord, [y[0], y[1]])
+        return utils.dword_to_int(*x_dword), utils.dword_to_int(*y_dword)
