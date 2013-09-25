@@ -12,6 +12,9 @@ def int_to_dword(value):
     The value (which must be < 2**16) is split up into a two-byte structure:
     (high byte, low byte).
 
+    TODO: the name "int_to_dword" is not correct, a dword is a 32 byte integer.
+    Better would be "int_to_dbyte" (double byte) or "split_int".
+
     :param value: The value to be converted.
     :type value: int < 2**16
     :returns: 2-Tuple with high byte and low byte.

@@ -1,1 +1,1 @@
-LANDSCAPE
+ACK = 0x06

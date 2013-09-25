@@ -29,7 +29,7 @@ def demo_text(disp):
                          "But you give all you got, weighin' in at nineteen stone")
 
 
-display = Display.Display("COM4", 9600)
+disp = display.Display('/dev/ttyUSB0', 9600)
 time.sleep(3)
 disp.cls()
 disp.set_orientation(1)
