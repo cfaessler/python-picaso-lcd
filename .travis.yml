@@ -3,6 +3,6 @@ python:
     - 2.6
     - 2.7
 install:
-    - pip install pytest --use-mirrors
+    - pip install pytest pyserial --use-mirrors
 script:
     - py.test
