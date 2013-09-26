@@ -4,7 +4,7 @@ from __future__ import print_function, division, absolute_import, unicode_litera
 import serial
 from . import utils
 from .constants import ACK
-from .exceptions import PicasoException
+from .exceptions import PicasoError, CommunicationError
 
 
 # TODO introduce logging
@@ -12,7 +12,7 @@ from .exceptions import PicasoException
 class Display(object):
     """This class represents a 4D Systems serial LCD."""
 
-    def __init__(self, port, baudrate=9600):
+    def __init__(self, port, baudrate=9600, read_timeout=10, write_timeout=10):
         """
         Initialize an instance of the LCD.
 
@@ -20,13 +20,21 @@ class Display(object):
         :type port: str or unicode
         :param baudrate: default 9600 in SPE2 rev 1.1
         :type baudrate: int
+        :param read_timeout: Serial read timeout. This may be ``None``
+            (blocking), ``0`` (non-blocking) or an integer > 0 (seconds).
+        :type read_timeout: int or None
+        :param write_timeout: Serial write timeout. This may be ``None``
+            (blocking), ``0`` (non-blocking) or an integer > 0 (seconds).
+        :type write_timeout: int or None
         :rtype: Display instance
         """
-        self._ser = serial.Serial(port, baudrate=baudrate, stopbits=1)
+        self._ser = serial.Serial(port, baudrate=baudrate, stopbits=1,
+                timeout=read_timeout, writeTimeout=write_timeout)
         self._contrast = 15
 
         # Initialize subsystems
         self.text = DisplayText(self)
+        self.touch = DisplayTouch(self)
 
     ### Serial communication handling ###
 
@@ -76,10 +84,12 @@ class Display(object):
         """
         # First return value must be an ACK byte (0x06).
         ack = self._ser.read()
+        if not ack:
+            raise CommunicationError('Read timeout reached.')
         if ord(ack) != ACK:
             msg = 'Instead of an ACK byte, "{!r}" was returned.'.format(ord(ack))
             print(msg)
-            raise PicasoException(msg)
+            raise PicasoError(msg)
 
         # If applicable, fetch response values
         values = [] if return_bytes else None
@@ -271,6 +281,94 @@ class DisplayText(object):
         self.d.write_raw_cmd(cmd)
 
         # Verify return values
-        length_written = utils.dword_to_int(*self.d._get_ack(2))
+        response = self.d._get_ack(2)
+        length_written = utils.dword_to_int(*response)
         assert length_written == len(string), \
                 'Length of string does not match length of original string'
+
+
+class DisplayTouch(object):
+    """Touchscreen related functions."""
+
+    def __init__(self, display):
+        """
+        :param display: The display instance.
+        :type display: Display
+        """
+        self.d = display
+
+    def set_detect_region(self, x1, y1, x2, y2):
+        """
+        Set the touch detect region.
+
+        Specifies a new touch detect region on the screen. This setting will
+        filter out any touch activity outside the region and only touch
+        activity within that region will be reported by the status poll *Touch
+        Get* command.
+
+        :param x1: X coordinate of top left corner of the region
+        :type line: int
+        :param y1: Y coordinate of top left corner of the region
+        :type column: int
+        :param x1: X coordinate of bottom right corner of the region
+        :type line: int
+        :param y1: Y coordinate of bottom right corner of the region
+        :type column: int
+
+        """
+        self.d.write_cmd([0xff39, line, column])
+        self.d._get_ack()
+
+    def set_mode(self, mode):
+        """
+        Set touch screen related parameters.
+
+        mode = 0: Enables and initialises Touch Screen hardware.
+        mode = 1: Disables the Touch Screen.
+        mode = 2: This will reset the current active region to default which is
+        the full screen area.
+
+        Note: Touch Screen task runs in the background and disabling it 
+        when not in use will free up extra resources for 4DGL CPU cycles.
+
+        :param mode: The touch mode (0, 1 or 2). See method docstring for more information.
+        :type mode: int
+
+        """
+        self.d.write_cmd([0xff39, mode])
+        self.d._get_ack()
+
+    def get_status(self, mode):
+        """
+        Poll the touch screen.
+
+        Returns various Touch Screen parameters to caller, based on the touch
+        detect region on the screen set by the *Touch Detect Region* command.
+
+        Request modes:
+        --------------
+
+        mode = 0: Get status
+        mode = 1: Get X coordinates
+        mode = 2: Get Y coordinates
+
+        Response values:
+        ----------------
+
+        mode = 0: The various states of the touch screen. Possible values:
+            0 = INVALID / NOTOUCH
+            1 = PRESS
+            2 = RELEASE
+            3 = MOVING
+        mode = 1: The X coordinates of the touch
+        mode = 2: The Y coordinates of the touch
+
+        :param mode: The status mode (0, 1 or 2). See method docstring for more information.
+        :type mode: int
+        :returns: A value dependent on the request mode.
+        :retval: int
+
+        """
+        self.d.write_cmd([0xff37, mode])
+        response = self.d._get_ack(2)
+        return utils.dword_to_int(*response)
