@@ -38,7 +38,7 @@ class Display(object):
 
     ### Serial communication handling ###
 
-    def write_cmd(self, cmd):
+    def write_cmd(self, cmd, return_bytes=0):
         """
         Write list of words to the serial port.
 
@@ -51,30 +51,38 @@ class Display(object):
 
         :param cmd: The list of command words (16 bit) to send.
         :type cmd: list of int
+        :param return_bytes: Number of return bytes. Default 0.
+        :type return_bytes: int
+        :returns: List of response bytes if there are any, else None.
+        :rtype: list or none
 
         """
         for c in cmd:
             high_byte, low_byte = utils.int_to_dword(c)
             self._ser.write(chr(high_byte))
             self._ser.write(chr(low_byte))
+        return self._get_ack(return_bytes)
 
-    def write_raw_cmd(self, cmd):
+    def write_raw_cmd(self, cmd, return_bytes=0):
         """
         Write list of bytes directly to the serial port.
 
         :param cmd: List containing numeric bytes.
         :type cmd: list of int
+        :param return_bytes: Number of return bytes. Default 0.
+        :type return_bytes: int
+        :returns: List of response bytes if there are any, else None.
+        :rtype: list or none
 
         """
         for c in cmd:
             self._ser.write(chr(c))
+        return self._get_ack(return_bytes)
 
     def _get_ack(self, return_bytes=0):
         """
         Wait for the ACK byte. If applicable, fetch and return the response
         values.
-
-        TODO: Shouldn't this automatically be called from ``write_cmd``?
 
         :param return_bytes: Number of return bytes. Default 0.
         :type return_bytes: int
@@ -104,8 +112,7 @@ class Display(object):
         cmd = 0xffc5
         if filled:
             cmd = 0xffc4
-        self.write_cmd([cmd, x1, y1, x2, y2, color])
-        return self._get_ack()
+        return self.write_cmd([cmd, x1, y1, x2, y2, color])
 
     def gfx_triangle(self, vertices, filled=False):
         self.gfx_polyline(vertices, closed=True, filled=filled)
@@ -130,7 +137,6 @@ class Display(object):
             cmd_list.append(y)
         cmd_list.append(color)
         self.write_cmd(cmd_list)
-        self._get_ack()
 
     def gfx_circle(self, x, y, rad, color, filled=False):
         self.gfx_ellipse(x, y, rad, rad, color, filled=filled)
@@ -140,26 +146,20 @@ class Display(object):
         if filled:
             cmd = 0xffb1
         self.write_cmd([cmd, x, y, xrad, yrad, color])
-        self._get_ack()
 
     def gfx_line(self, x1, y1, x2, y2, color):
         self.write_cmd([0xffc8, x1, y1, x2, y2, color])
-        self._get_ack()
 
     def cls(self):
         self.write_cmd([0xffcd])
-        self._get_ack()
 
     def set_pixel(self, x, y, color):
         """Set the color of the pixel at ``x``/``y`` to ``color``."""
         self.write_cmd([0xffc1, x, y, color])
-        self._get_ack()
 
     def set_font_size(self, size):
-        self.write_cmd([0xffe4, size])
-        self._get_ack(2)
-        self.write_cmd([0xffe3, size])
-        self._get_ack(2)
+        self.write_cmd([0xffe4, size], 2)
+        self.write_cmd([0xffe3, size], 2)
 
     def set_font(self, font):
         """
@@ -168,21 +168,17 @@ class Display(object):
         1 - Font2
         3 - Font3 -> Default Font
         """
-        self.write_cmd([0xffe5, font])
-        self._get_ack(2)
+        self.write_cmd([0xffe5, font], 2)
 
     def set_text_color(self, color):
-        self.write_cmd([0xffe7, color])
-        return self._get_ack(2)
+        self.write_cmd([0xffe7, color], 2)
 
     def set_background_color(self, color):
-        self.write_cmd([0xffa4, color])
-        self._get_ack(2)
+        self.write_cmd([0xffa4, color], 2)
 
     def set_contrast(self, contrast):
         """Set the contrast. Note that this has no effect on most LCDs."""
-        self.write_cmd([0xff9c, contrast])
-        val = self._get_ack(2)
+        val = self.write_cmd([0xff9c, contrast], 2)
         print('turning off, contrast was: {0}'.format(val))
         dword = map(ord, val)
         self._contrast = utils.dword_to_int(*dword)
@@ -203,15 +199,13 @@ class Display(object):
 
         :returns: previous orientation
         """
-        self.write_cmd([0xff9e, value])
-        return self._get_ack(2)[0]
+        response = self.write_cmd([0xff9e, value], 2)
+        return response[0]
 
     def get_display_size(self):
-        self.write_cmd([0xffa6, 0])
-        x = self._get_ack(2)
+        x = self.write_cmd([0xffa6, 0], 2)
         x_dword = map(ord, [x[0], x[1]])
-        self.write_cmd([0xffa6, 1])
-        y = self._get_ack(2)
+        y = self.write_cmd([0xffa6, 1], 2)
         y_dword = map(ord, [y[0], y[1]])
         return utils.dword_to_int(*x_dword), utils.dword_to_int(*y_dword)
 
@@ -246,7 +240,6 @@ class DisplayText(object):
 
         """
         self.d.write_cmd([0xffe9, line, column])
-        self.d._get_ack()
 
     def put_character(self, char):
         """
@@ -259,7 +252,6 @@ class DisplayText(object):
 
         """
         self.d.write_cmd([0xfffe, ord(char)])
-        self.d._get_ack()
 
     def put_string(self, string):
         """
@@ -278,10 +270,9 @@ class DisplayText(object):
         for char in string:
             cmd.append(ord(char))
         cmd.append(0x00)
-        self.d.write_raw_cmd(cmd)
+        response = self.d.write_raw_cmd(cmd, 2)
 
         # Verify return values
-        response = self.d._get_ack(2)
         length_written = utils.dword_to_int(*response)
         assert length_written == len(string), \
                 'Length of string does not match length of original string'
@@ -317,7 +308,6 @@ class DisplayTouch(object):
 
         """
         self.d.write_cmd([0xff39, line, column])
-        self.d._get_ack()
 
     def set_mode(self, mode):
         """
@@ -336,7 +326,6 @@ class DisplayTouch(object):
 
         """
         self.d.write_cmd([0xff39, mode])
-        self.d._get_ack()
 
     def get_status(self, mode):
         """
@@ -369,6 +358,5 @@ class DisplayTouch(object):
         :retval: int
 
         """
-        self.d.write_cmd([0xff37, mode])
-        response = self.d._get_ack(2)
+        response = self.d.write_cmd([0xff37, mode], 2)
         return utils.dword_to_int(*response)
