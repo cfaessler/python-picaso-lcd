@@ -153,25 +153,7 @@ class Display(object):
     def cls(self):
         self.write_cmd([0xffcd])
 
-    def set_pixel(self, x, y, color):
-        """Set the color of the pixel at ``x``/``y`` to ``color``."""
-        self.write_cmd([0xffc1, x, y, color])
 
-    def set_font_size(self, size):
-        self.write_cmd([0xffe4, size], 2)
-        self.write_cmd([0xffe3, size], 2)
-
-    def set_font(self, font):
-        """
-        :param font:
-        0 - Font1 -> System Font
-        1 - Font2
-        3 - Font3 -> Default Font
-        """
-        self.write_cmd([0xffe5, font], 2)
-
-    def set_text_color(self, color):
-        self.write_cmd([0xffe7, color], 2)
 
     def set_background_color(self, color):
         self.write_cmd([0xffa4, color], 2)
@@ -277,6 +259,205 @@ class DisplayText(object):
         assert length_written == len(string), \
                 'Length of string does not match length of original string'
 
+    def get_character_width(self, character):
+        """
+        Get the width of a character in pixels.
+
+        The *Character Width* command is used to calculate the width in pixel
+        units for a character, based on the currently selected font. The font can be
+        proportional or mono-spaced. If the total width of the character exceeds 255
+        pixel units, the function will return the 'wrapped' (modulo 8) value.
+
+        TODO: Handle and hide this strange modulo stuff!
+
+        :param character: The ASCII character for which to calculate the width.
+        :type character: str
+        :returns: The width of the character. If the total width of the
+            character exceeds 255 pixel units, the function will return the
+            'wrapped' (modulo 8) value.
+        :rtype: int
+
+        """
+        response = self.d.write_raw_cmd([0x00, 0x1e, ord(character)], 2)
+        return utils.dword_to_int(*response)
+
+     def get_character_height(self, character):
+        """
+        Get the height of a character in pixels.
+
+        The *Character Height* command is used to calculate the height in pixel
+        units for a character, based on the currently selected font. The font
+        can be proportional or mono-spaced. If the total height of the
+        character exceeds 255 pixel units, the function will return the
+        'wrapped' (modulo 8) value.
+
+        TODO: Handle and hide this strange modulo stuff!
+
+        :param character: The ASCII character for which to calculate the height.
+        :type character: str
+        :returns: The height of the character. If the total height of the
+            character exceeds 255 pixel units, the function will return the
+            'wrapped' (modulo 8) value.
+        :rtype: int
+
+        """
+        response = self.d.write_raw_cmd([0x00, 0x1d, ord(character)], 2)
+        return utils.dword_to_int(*response)   
+
+    def set_fg_color(self, color):
+        """
+        Set the text foreground color.
+
+        The *Text Foreground Color* command sets the text foreground color, and
+        reports back the previous foreground color.
+
+        :param color: The color to be set as foreground color.
+        :type color: int
+        :returns: The previous foreground color.
+        :rtype: int
+
+        """
+        response = self.write_cmd([0xffe7, color], 2)
+        return utils.dword_to_int(*response)
+
+    def set_bg_color(self, color):
+        """
+        Set the text background color.
+
+        The *Text Background Color* command sets the text background color, and
+        reports back the previous background color.
+
+        :param color: The color to be set as background color.
+        :type color: int
+        :returns: The previous background color.
+        :rtype: int
+
+        """
+        response = self.write_cmd([0xffe6, color], 2)
+        return utils.dword_to_int(*response)
+
+    def set_font(self, font):
+        """
+        Set the used font.
+
+        The *Set Font* command sets the required font using its ID, and report
+        back the previous font ID used.
+
+        :param font: The font ID to use.
+            0 - Font1 (System Font)
+            1 - Font2
+            3 - Font3 (Default Font)
+        :type font: int
+        :returns: The previous font ID used.
+        :rtype: int
+
+        """
+        response = self.write_cmd([0xffe5, font], 2)
+        return utils.dword_to_int(*response)
+
+    def set_width(self, multiplier):
+        """
+        Set the text width.
+
+        The *Text Width* command sets the text width multiplier between 1 and
+        16, and returns the previous multiplier.
+
+        :param multiplier: Width multiplier, 1 to 16 (Default 1).
+        :type multiplier: int
+        :returns: Previous multiplier.
+        :rtype: int
+
+        """
+        response = self.write_cmd([0xffe4, multiplier], 2)
+        return utils.dword_to_int(*response)
+
+    def set_height(self, multiplier):
+        """
+        Set the text height.
+
+        The *Text Height* command sets the text height multiplier between 1 and
+        16, and returns the previous multiplier.
+
+        :param multiplier: Height multiplier, 1 to 16 (default 1).
+        :type multiplier: int
+        :returns: Previous multiplier.
+        :rtype: int
+
+        """
+        response = self.write_cmd([0xffe3, multiplier], 2)
+        return utils.dword_to_int(*response)
+
+    def set_size(self, multiplier):
+        """
+        Set the text size.
+
+        This is a shortcut functions that calls both :meth:``set_width`` and
+        :meth:``set_height``. The return value is a tuple containing previous
+        width- and height- multipliers.
+
+        :param multiplier: Size multiplier, 1 to 16 (default 1).
+        :type multiplier: int
+        :returns: Tuple ``(previous_width, previous_height)``
+        :rtype: tuple(int, int)
+
+        """
+        return self.set_width(multiplier), self.set_height(multiplier)
+
+    def set_x_gap(self, pixelcount):
+        """
+        Set the horizontal gap between characters.
+
+        The *Text X-gap* command sets the pixel gap between characters
+        (x-axis), where the gap is in pixel units, and the response is the
+        previous pixelcount value.
+
+        :param pixelcount: Gap size in pixels, 0 to 32 (default 0).
+        :type pixelcount: int
+        :returns: Previous pixelcount value.
+        :rtype: int
+
+        """
+        response = self.write_cmd([0xffe2, pixelcount], 2)
+        return utils.dword_to_int(*response)
+
+    def set_y_gap(self, pixelcount):
+        """
+        Set the vertical gap between characters.
+
+        The *Text Y-gap* command sets the pixel gap between characters
+        (y-axis), where the gap is in pixel units, and the response is the
+        previous pixelcount value.
+
+        This command is required to be used if setting text to have an
+        Underline using the *Text Underline* command, or *Text Attributes*
+        command with the suitable bits set.  See these command for further
+        information.
+
+        :param pixelcount: Gap size in pixels, 0 to 32 (default 0).
+        :type pixelcount: int
+        :returns: Previous pixelcount value.
+        :rtype: int
+
+        """
+        response = self.write_cmd([0xffe1, pixelcount], 2)
+        return utils.dword_to_int(*response)
+
+    def set_gap(self, pixelcount)
+        """
+        Set both the x- and the y-gap between characters.
+
+        This is a shortcut function that calls both :meth:``set_x_gap`` and
+        :meth:``set_y_gap``. The return value is a tuple containing the
+        previous pixelcount values.
+
+        :param pixelcount: Gap size in pixels, 0 to 32 (default 0).
+        :type pixelcount: int
+        :returns: Tuple ``(previous_x_gap, previous_y_gap)``
+        :rtype: tuple(int, int)
+
+        """
+        return self.set_x_gap(pixelcount), self.set_y_gap(pixelcount)
+
 
 class DisplayTouch(object):
     """Touchscreen related functions."""
@@ -355,7 +536,7 @@ class DisplayTouch(object):
         :param mode: The status mode (0, 1 or 2). See method docstring for more information.
         :type mode: int
         :returns: A value dependent on the request mode.
-        :retval: int
+        :rtype: int
 
         """
         response = self.d.write_cmd([0xff37, mode], 2)
