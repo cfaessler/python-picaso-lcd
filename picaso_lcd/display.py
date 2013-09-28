@@ -281,7 +281,7 @@ class DisplayText(object):
         response = self.d.write_raw_cmd([0x00, 0x1e, ord(character)], 2)
         return utils.dword_to_int(*response)
 
-     def get_character_height(self, character):
+    def get_character_height(self, character):
         """
         Get the height of a character in pixels.
 
@@ -442,7 +442,7 @@ class DisplayText(object):
         response = self.write_cmd([0xffe1, pixelcount], 2)
         return utils.dword_to_int(*response)
 
-    def set_gap(self, pixelcount)
+    def set_gap(self, pixelcount):
         """
         Set both the x- and the y-gap between characters.
 
