@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+"""
+This module contains all necessary code to control the LCD display. All the
+classes named ``DisplayFOO`` can also be accessed via a :class:`Display`
+instance at ``display.foo``.
+"""
 from __future__ import print_function, division, absolute_import, unicode_literals
 
 import serial
@@ -10,7 +15,8 @@ from .exceptions import PicasoError, CommunicationError
 # TODO introduce logging
 
 class Display(object):
-    """This class represents a 4D Systems serial LCD."""
+    """This class represents a 4D Systems serial LCD. It's the main class of
+    this project."""
 
     def __init__(self, port, baudrate=9600, read_timeout=10, write_timeout=10):
         """
@@ -193,7 +199,8 @@ class Display(object):
 
 
 class DisplayText(object):
-    """Text/String related functions."""
+    """Text/String related functions. Can be accessed directly from a
+    :class:`Display` instance using ``display.text.<method>``."""
 
     def __init__(self, display):
         """
@@ -460,7 +467,8 @@ class DisplayText(object):
 
 
 class DisplayTouch(object):
-    """Touchscreen related functions."""
+    """Touchscreen related functions.  Can be accessed directly from a
+    :class:`Display` instance using ``display.touch.<method>``."""
 
     def __init__(self, display):
         """
