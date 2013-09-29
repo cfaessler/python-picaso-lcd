@@ -324,7 +324,7 @@ class DisplayText(object):
         :rtype: int
 
         """
-        response = self.write_cmd([0xffe7, color], 2)
+        response = self.d.write_cmd([0xffe7, color], 2)
         return utils.dword_to_int(*response)
 
     def set_bg_color(self, color):
@@ -340,7 +340,7 @@ class DisplayText(object):
         :rtype: int
 
         """
-        response = self.write_cmd([0xffe6, color], 2)
+        response = self.d.write_cmd([0xffe6, color], 2)
         return utils.dword_to_int(*response)
 
     def set_font(self, font):
@@ -359,7 +359,7 @@ class DisplayText(object):
         :rtype: int
 
         """
-        response = self.write_cmd([0xffe5, font], 2)
+        response = self.d.write_cmd([0xffe5, font], 2)
         return utils.dword_to_int(*response)
 
     def set_width(self, multiplier):
@@ -375,7 +375,7 @@ class DisplayText(object):
         :rtype: int
 
         """
-        response = self.write_cmd([0xffe4, multiplier], 2)
+        response = self.d.write_cmd([0xffe4, multiplier], 2)
         return utils.dword_to_int(*response)
 
     def set_height(self, multiplier):
@@ -391,7 +391,7 @@ class DisplayText(object):
         :rtype: int
 
         """
-        response = self.write_cmd([0xffe3, multiplier], 2)
+        response = self.d.write_cmd([0xffe3, multiplier], 2)
         return utils.dword_to_int(*response)
 
     def set_size(self, multiplier):
@@ -424,7 +424,7 @@ class DisplayText(object):
         :rtype: int
 
         """
-        response = self.write_cmd([0xffe2, pixelcount], 2)
+        response = self.d.write_cmd([0xffe2, pixelcount], 2)
         return utils.dword_to_int(*response)
 
     def set_y_gap(self, pixelcount):
@@ -446,7 +446,7 @@ class DisplayText(object):
         :rtype: int
 
         """
-        response = self.write_cmd([0xffe1, pixelcount], 2)
+        response = self.d.write_cmd([0xffe1, pixelcount], 2)
         return utils.dword_to_int(*response)
 
     def set_gap(self, pixelcount):
@@ -464,6 +464,142 @@ class DisplayText(object):
 
         """
         return self.set_x_gap(pixelcount), self.set_y_gap(pixelcount)
+
+    def set_bold(self, mode):
+        """
+        Enable or disable bold mode.
+
+        The *Text Bold* command sets the Bold attribute for the text and report
+        back the previous bold status.
+
+        :param mode: 1 for ON, 0 for OFF.
+        :type mode: int
+        :returns: Previous mode.
+        :rtype: int
+
+        """
+        response = self.d.write_cmd([0xffde, mode], 2)
+        return utils.dword_to_int(*response)
+
+    def set_inverse(self, mode):
+        """
+        Enable or disable inverse mode.
+
+        The *Text Inverse* command sets the inverse attribute for the text and
+        report back the previous inverse status.
+
+        :param mode: 1 for ON, 0 for OFF.
+        :type mode: int
+        :returns: Previous mode.
+        :rtype: int
+
+        """
+        response = self.d.write_cmd([0xffdc, mode], 2)
+        return utils.dword_to_int(*response)
+
+    def set_italic(self, mode):
+        """
+        Enable or disable italic mode.
+
+        The *Text Italic* command sets the italic attribute for the text and
+        report back the previous italic status.
+
+        :param mode: 1 for ON, 0 for OFF.
+        :type mode: int
+        :returns: Previous mode.
+        :rtype: int
+
+        """
+        response = self.d.write_cmd([0xffdd, mode], 2)
+        return utils.dword_to_int(*response)
+
+    def set_opacity(self, mode):
+        """
+        Enable or disable opacity.
+
+        The *Text Opacity* command selects whether or not the 'background'
+        pixels are drawn, and returns the previous text opacity status.
+        (Default mode is OPAQUE with BLACK background.)
+
+        :param mode: 1 for ON (opaque), 0 for OFF (transparent).
+        :type mode: int
+        :returns: Previous mode.
+        :rtype: int
+
+        """
+        response = self.d.write_cmd([0xffdf, mode], 2)
+        return utils.dword_to_int(*response)
+
+    def set_underline(self, mode):
+        """
+        Enable or disable text underline.
+
+        The *Text Underline* command sets the text to underlined, and returns
+        the previous text underline status.
+
+        Note: The *Text Y-gap* command is required to be at least 2 for the
+        underline to be visible. Please refer to the *Text Y-gap* command for
+        further information.
+
+        :param mode: 1 for ON, 0 for OFF.
+        :type mode: int
+        :returns: Previous mode.
+        :rtype: int
+
+        """
+        response = self.d.write_cmd([0xffdb, mode], 2)
+        return utils.dword_to_int(*response)
+
+    def set_attributes(self, bold=False, italic=False, inverse=False, underlined=False):
+        """
+        Control text attributes like bold, italic, underlined etc in a single
+        command.
+
+        The Text Attributes command controls the following functions:
+
+        - Text Bold
+        - Text Italic
+        - Text Inverse
+        - Text Underlined
+
+        Note: The *Text Y-gap* command is required to be at least 2 for the
+        underline (Text Underlined attribute) to be visible. Please refer to
+        the *Text Y-gap* command for further information.
+
+        :param bold: Text bold attribute.
+        :type bold: bool
+        :param italic: Text italic attribute.
+        :type italic: bool
+        :param inverse: Text inverse attribute.
+        :type inverse: bool
+        :param underlined: Text underlined attribute.
+        :type underlined: bool
+        :returns: Dictionary of previous attribute values. Note that this does
+            not consider values set using the dedicated ``set_bold``,
+            ``set_italic`` etc functions.
+        :rtype: dict of bool
+
+        """
+        BOLD, ITALIC, INVERSE, UNDERLINED = 0x10, 0x20, 0x40, 0x80
+
+        attributes = 0
+        if bold is True:
+            attributes |= BOLD
+        if italic is True:
+            attributes |= ITALIC
+        if inverse is True:
+            attributes |= INVERSE
+        if underlined is True:
+            attributes |= UNDERLINED
+
+        response = self.d.write_cmd([0xffda, attributes], 2)
+        prev_attributes = utils.dword_to_int(*response)
+        return {
+            'bold': bool(prev_attributes & BOLD),
+            'italic': bool(prev_attributes & ITALIC),
+            'inverse': bool(prev_attributes & INVERSE),
+            'underlined': bool(prev_attributes & UNDERLINED),
+        }
 
 
 class DisplayTouch(object):
