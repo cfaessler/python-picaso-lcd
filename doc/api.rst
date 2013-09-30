@@ -18,7 +18,7 @@ picaso_lcd.utils
     :members:
 
 picaso_lcd.exceptions
-----------------
+---------------------
 
 .. automodule:: picaso_lcd.exceptions
     :members:

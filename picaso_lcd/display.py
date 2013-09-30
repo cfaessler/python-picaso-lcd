@@ -20,8 +20,6 @@ class Display(object):
 
     def __init__(self, port, baudrate=9600, read_timeout=10, write_timeout=10):
         """
-        Initialize an instance of the LCD.
-
         :param port: serial port to which the display is connected
         :type port: str or unicode
         :param baudrate: default 9600 in SPE2 rev 1.1
@@ -33,6 +31,7 @@ class Display(object):
             (blocking), ``0`` (non-blocking) or an integer > 0 (seconds).
         :type write_timeout: int or None
         :rtype: Display instance
+
         """
         self._ser = serial.Serial(port, baudrate=baudrate, stopbits=1,
                 timeout=read_timeout, writeTimeout=write_timeout)
@@ -213,19 +212,20 @@ class DisplayText(object):
         """
         Move cursor to specified position.
 
-        The *Move Cursor* command moves the text cursor to a screen position
-        set by line and column parameters. The line and column position is
-        calculated, based on the size and scaling factor for the currently
-        selected font. When text is outputted to screen it will be displayed
-        from this position. The text position could also be set with *Move
-        Origin* command if required to set the text position to an exact pixel
-        location. Note that lines and columns start from 0, so line 0, column 0
-        is the top left corner of the display.
+        This command moves the text cursor to a screen position set by line and
+        column parameters. The line and column position is calculated, based on
+        the size and scaling factor for the currently selected font. When text
+        is outputted to screen it will be displayed from this position. The
+        text position could also be set with *Move Origin* command if required
+        to set the text position to an exact pixel location. Note that lines
+        and columns start from 0, so line 0, column 0 is the top left corner of
+        the display.
 
         :param line: Line number (0..n)
         :type line: int
         :param column: Column number (0..n)
         :type column: int
+        :returns: None
 
         """
         self.d.write_cmd([0xffe9, line, column])
@@ -234,20 +234,20 @@ class DisplayText(object):
         """
         Write a single character to the display.
 
-        The *Put Character* command prints a single character to the display.
-
         :param char: The character to print. Must be a printable ASCII character.
         :type char: str
+        :returns: None
 
         """
         self.d.write_cmd([0xfffe, ord(char)])
 
     def put_string(self, string):
         """
-        Write a string to the display.
+        Write a string to the display. Maximum string length is 511 chars.
 
-        The *Put String* command prints a string to the display. Maximum string
-        length is 511 chars.
+        :param string: The string to print. Must consist of printable ASCII
+            characters.
+        :type string: str
 
         """
         # Validate input
@@ -398,8 +398,8 @@ class DisplayText(object):
         """
         Set the text size.
 
-        This is a shortcut functions that calls both :meth:``set_width`` and
-        :meth:``set_height``. The return value is a tuple containing previous
+        This is a shortcut functions that calls both :meth:`set_width` and
+        :meth:`set_height`. The return value is a tuple containing previous
         width- and height- multipliers.
 
         :param multiplier: Size multiplier, 1 to 16 (default 1).
@@ -436,9 +436,9 @@ class DisplayText(object):
         previous pixelcount value.
 
         This command is required to be used if setting text to have an
-        Underline using the *Text Underline* command, or *Text Attributes*
-        command with the suitable bits set.  See these command for further
-        information.
+        Underline using the :meth:`set_underline` command, or
+        :meth:`set_attributes` command with the suitable bits set. See these
+        command for further information.
 
         :param pixelcount: Gap size in pixels, 0 to 32 (default 0).
         :type pixelcount: int
@@ -453,8 +453,8 @@ class DisplayText(object):
         """
         Set both the x- and the y-gap between characters.
 
-        This is a shortcut function that calls both :meth:``set_x_gap`` and
-        :meth:``set_y_gap``. The return value is a tuple containing the
+        This is a shortcut function that calls both :meth:`set_x_gap` and
+        :meth:`set_y_gap`. The return value is a tuple containing the
         previous pixelcount values.
 
         :param pixelcount: Gap size in pixels, 0 to 32 (default 0).
@@ -537,9 +537,9 @@ class DisplayText(object):
         The *Text Underline* command sets the text to underlined, and returns
         the previous text underline status.
 
-        Note: The *Text Y-gap* command is required to be at least 2 for the
-        underline to be visible. Please refer to the *Text Y-gap* command for
-        further information.
+        Note: The :meth:`set_y_gap` command is required to be at least 2 for
+        the underline to be visible. Please refer to the :meth:`set_y_gap`
+        command for further information.
 
         :param mode: 1 for ON, 0 for OFF.
         :type mode: int
@@ -562,9 +562,9 @@ class DisplayText(object):
         - Text Inverse
         - Text Underlined
 
-        Note: The *Text Y-gap* command is required to be at least 2 for the
-        underline (Text Underlined attribute) to be visible. Please refer to
-        the *Text Y-gap* command for further information.
+        Note: The :meth:`set_y_gap` command is required to be at least 2 for
+        the underline (Text Underlined attribute) to be visible. Please refer
+        to the :meth:`set_y_gap` command for further information.
 
         :param bold: Text bold attribute.
         :type bold: bool
@@ -619,8 +619,8 @@ class DisplayTouch(object):
 
         Specifies a new touch detect region on the screen. This setting will
         filter out any touch activity outside the region and only touch
-        activity within that region will be reported by the status poll *Touch
-        Get* command.
+        activity within that region will be reported by the status poll
+        :meth:`get_status` command.
 
         :param x1: X coordinate of top left corner of the region
         :type line: int
@@ -646,7 +646,8 @@ class DisplayTouch(object):
         Note: Touch Screen task runs in the background and disabling it 
         when not in use will free up extra resources for 4DGL CPU cycles.
 
-        :param mode: The touch mode (0, 1 or 2). See method docstring for more information.
+        :param mode: The touch mode (0, 1 or 2). See method docstring for more
+            information.
         :type mode: int
 
         """
@@ -657,27 +658,24 @@ class DisplayTouch(object):
         Poll the touch screen.
 
         Returns various Touch Screen parameters to caller, based on the touch
-        detect region on the screen set by the *Touch Detect Region* command.
+        detect region on the screen set by the :meth:`set_detect_region`
+        command.
 
-        Request modes:
-        --------------
+        **Request modes**
 
-        mode = 0: Get status
-        mode = 1: Get X coordinates
-        mode = 2: Get Y coordinates
+        - mode = 0: Get status
+        - mode = 1: Get X coordinates
+        - mode = 2: Get Y coordinates
 
-        Response values:
-        ----------------
+        **Response values**
 
-        mode = 0: The various states of the touch screen. Possible values:
-            0 = INVALID / NOTOUCH
-            1 = PRESS
-            2 = RELEASE
-            3 = MOVING
-        mode = 1: The X coordinates of the touch
-        mode = 2: The Y coordinates of the touch
+        - mode = 0: The various states of the touch screen. Possible values:
+            0 = INVALID / NOTOUCH, 1 = PRESS, 2 = RELEASE, 3 = MOVING
+        - mode = 1: The X coordinates of the touch
+        - mode = 2: The Y coordinates of the touch
 
-        :param mode: The status mode (0, 1 or 2). See method docstring for more information.
+        :param mode: The status mode (0, 1 or 2). See method docstring for more
+            information.
         :type mode: int
         :returns: A value dependent on the request mode.
         :rtype: int
