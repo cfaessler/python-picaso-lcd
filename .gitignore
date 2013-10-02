@@ -37,4 +37,4 @@ nosetests.xml
 *.swp
 
 # Sphinx
-doc/_build
+docs/_build
