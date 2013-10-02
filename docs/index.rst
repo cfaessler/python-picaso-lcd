@@ -7,8 +7,8 @@
 Welcome to the python-picaso-lcd documentation!
 ===============================================
 
-.. image:: https://travis-ci.org/cfaessler/4D_Display.png
-    :target: https://travis-ci.org/cfaessler/4D_Display
+.. image:: https://travis-ci.org/cfaessler/python-picaso-lcd.png
+    :target: https://travis-ci.org/cfaessler/python-picaso-lcd
     :alt: Build Status
 
 This is a Python library for PICASO_ based LCDs by `4D Systems`_ connected via
