@@ -63,7 +63,7 @@ class Display(object):
 
         """
         for c in cmd:
-            high_byte, low_byte = utils.int_to_dword(c)
+            high_byte, low_byte = utils.int_to_dbyte(c)
             self._ser.write(chr(high_byte))
             self._ser.write(chr(low_byte))
         return self._get_ack(return_bytes)
@@ -167,8 +167,8 @@ class Display(object):
         """Set the contrast. Note that this has no effect on most LCDs."""
         val = self.write_cmd([0xff9c, contrast], 2)
         print('turning off, contrast was: {0}'.format(val))
-        dword = map(ord, val)
-        self._contrast = utils.dword_to_int(*dword)
+        dbyte = map(ord, val)
+        self._contrast = utils.dbyte_to_int(*dbyte)
 
     def off(self):
         self.set_contrast(0)
@@ -190,11 +190,15 @@ class Display(object):
         return response[0]
 
     def get_display_size(self):
+        # TODO: broken, fix.
         x = self.write_cmd([0xffa6, 0], 2)
-        x_dword = map(ord, [x[0], x[1]])
+        x_dbyte = map(ord, [x[0], x[1]])
         y = self.write_cmd([0xffa6, 1], 2)
-        y_dword = map(ord, [y[0], y[1]])
-        return utils.dword_to_int(*x_dword), utils.dword_to_int(*y_dword)
+        y_dbyte = map(ord, [y[0], y[1]])
+        return utils.dbyte_to_int(*x_dbyte), utils.dbyte_to_int(*y_dbyte)
+
+    def set_baudrate(self, index):
+        self.write_cmd([0x0026, index])
 
 
 class DisplayText(object):
@@ -262,7 +266,7 @@ class DisplayText(object):
         response = self.d.write_raw_cmd(cmd, 2)
 
         # Verify return values
-        length_written = utils.dword_to_int(*response)
+        length_written = utils.dbyte_to_int(*response)
         assert length_written == len(string), \
                 'Length of string does not match length of original string'
 
@@ -286,7 +290,7 @@ class DisplayText(object):
 
         """
         response = self.d.write_raw_cmd([0x00, 0x1e, ord(character)], 2)
-        return utils.dword_to_int(*response)
+        return utils.dbyte_to_int(*response)
 
     def get_character_height(self, character):
         """
@@ -309,7 +313,7 @@ class DisplayText(object):
 
         """
         response = self.d.write_raw_cmd([0x00, 0x1d, ord(character)], 2)
-        return utils.dword_to_int(*response)   
+        return utils.dbyte_to_int(*response)
 
     def set_fg_color(self, color):
         """
@@ -325,7 +329,7 @@ class DisplayText(object):
 
         """
         response = self.d.write_cmd([0xffe7, color], 2)
-        return utils.dword_to_int(*response)
+        return utils.dbyte_to_int(*response)
 
     def set_bg_color(self, color):
         """
@@ -341,7 +345,7 @@ class DisplayText(object):
 
         """
         response = self.d.write_cmd([0xffe6, color], 2)
-        return utils.dword_to_int(*response)
+        return utils.dbyte_to_int(*response)
 
     def set_font(self, font):
         """
@@ -360,7 +364,7 @@ class DisplayText(object):
 
         """
         response = self.d.write_cmd([0xffe5, font], 2)
-        return utils.dword_to_int(*response)
+        return utils.dbyte_to_int(*response)
 
     def set_width(self, multiplier):
         """
@@ -376,7 +380,7 @@ class DisplayText(object):
 
         """
         response = self.d.write_cmd([0xffe4, multiplier], 2)
-        return utils.dword_to_int(*response)
+        return utils.dbyte_to_int(*response)
 
     def set_height(self, multiplier):
         """
@@ -392,7 +396,7 @@ class DisplayText(object):
 
         """
         response = self.d.write_cmd([0xffe3, multiplier], 2)
-        return utils.dword_to_int(*response)
+        return utils.dbyte_to_int(*response)
 
     def set_size(self, multiplier):
         """
@@ -425,7 +429,7 @@ class DisplayText(object):
 
         """
         response = self.d.write_cmd([0xffe2, pixelcount], 2)
-        return utils.dword_to_int(*response)
+        return utils.dbyte_to_int(*response)
 
     def set_y_gap(self, pixelcount):
         """
@@ -447,7 +451,7 @@ class DisplayText(object):
 
         """
         response = self.d.write_cmd([0xffe1, pixelcount], 2)
-        return utils.dword_to_int(*response)
+        return utils.dbyte_to_int(*response)
 
     def set_gap(self, pixelcount):
         """
@@ -479,7 +483,7 @@ class DisplayText(object):
 
         """
         response = self.d.write_cmd([0xffde, mode], 2)
-        return utils.dword_to_int(*response)
+        return utils.dbyte_to_int(*response)
 
     def set_inverse(self, mode):
         """
@@ -495,7 +499,7 @@ class DisplayText(object):
 
         """
         response = self.d.write_cmd([0xffdc, mode], 2)
-        return utils.dword_to_int(*response)
+        return utils.dbyte_to_int(*response)
 
     def set_italic(self, mode):
         """
@@ -511,7 +515,7 @@ class DisplayText(object):
 
         """
         response = self.d.write_cmd([0xffdd, mode], 2)
-        return utils.dword_to_int(*response)
+        return utils.dbyte_to_int(*response)
 
     def set_opacity(self, mode):
         """
@@ -528,7 +532,7 @@ class DisplayText(object):
 
         """
         response = self.d.write_cmd([0xffdf, mode], 2)
-        return utils.dword_to_int(*response)
+        return utils.dbyte_to_int(*response)
 
     def set_underline(self, mode):
         """
@@ -548,7 +552,7 @@ class DisplayText(object):
 
         """
         response = self.d.write_cmd([0xffdb, mode], 2)
-        return utils.dword_to_int(*response)
+        return utils.dbyte_to_int(*response)
 
     def set_attributes(self, bold=False, italic=False, inverse=False, underlined=False):
         """
@@ -593,7 +597,7 @@ class DisplayText(object):
             attributes |= UNDERLINED
 
         response = self.d.write_cmd([0xffda, attributes], 2)
-        prev_attributes = utils.dword_to_int(*response)
+        prev_attributes = utils.dbyte_to_int(*response)
         return {
             'bold': bool(prev_attributes & BOLD),
             'italic': bool(prev_attributes & ITALIC),
@@ -682,4 +686,4 @@ class DisplayTouch(object):
 
         """
         response = self.d.write_cmd([0xff37, mode], 2)
-        return utils.dword_to_int(*response)
+        return utils.dbyte_to_int(*response)

@@ -6,14 +6,11 @@ data or colors.
 from __future__ import print_function, division, absolute_import, unicode_literals
 
 
-def int_to_dword(value):
-    """Convert a single integer to a dword.
+def int_to_dbyte(value):
+    """Convert a single integer to a double byte: ``(high byte, low byte)``.
     
     The value (which must be < 2**16) is split up into a two-byte structure:
     (high byte, low byte).
-
-    TODO: the name "int_to_dword" is not correct, a dword is a 32 byte integer.
-    Better would be "int_to_dbyte" (double byte) or "split_int".
 
     :param value: The value to be converted.
     :type value: int < 2**16
@@ -29,14 +26,14 @@ def int_to_dword(value):
     return value >> 8, value & 0xFF
 
 
-def dword_to_int(high_byte, low_byte):
-    """Convert a dword to a single integer.
+def dbyte_to_int(high_byte, low_byte):
+    """Convert a double byte ``(high byte, low byte)`` to a single integer.
 
-    If you're already dealing with a dword 2-tuple, you can simply convert it
-    to an integer by using arg unpacking::
+    If you're already dealing with a 2-tuple, you can simply convert it to an
+    integer by using arg unpacking::
 
-        >>> dword = (0x1, 0x2)
-        >>> dword_to_int(*dword)
+        >>> dbyte = (0x1, 0x2)
+        >>> dbyte_to_int(*dbyte)
 
     :param high_byte: The high byte.
     :type high_byte: int

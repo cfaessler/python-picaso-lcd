@@ -6,7 +6,7 @@ import pytest
 from picaso_lcd import utils
 
 
-### int_to_dword ###
+### int_to_dbyte ###
 
 @pytest.mark.parametrize(('arg', 'expected'), [
     (0, (0, 0)),
@@ -16,18 +16,18 @@ from picaso_lcd import utils
     (256, (1, 0)),
     ((1 << 16) - 1, (255, 255)),
 ])
-def test_int_to_dword(arg, expected):
-    """Test the ``int_to_dword`` function."""
-    assert utils.int_to_dword(arg) == expected
+def test_int_to_dbyte(arg, expected):
+    """Test the ``int_to_dbyte`` function."""
+    assert utils.int_to_dbyte(arg) == expected
 
 
 @pytest.mark.parametrize('arg', [1 << 16, -1])
-def test_int_to_dword_validation(arg):
+def test_int_to_dbyte_validation(arg):
     with pytest.raises(ValueError):
-        utils.int_to_dword(arg)
+        utils.int_to_dbyte(arg)
 
 
-### dword_to_int ###
+### dbyte_to_int ###
 
 @pytest.mark.parametrize(('args', 'expected'), [
     ((0, 0), 0),
@@ -37,9 +37,9 @@ def test_int_to_dword_validation(arg):
     ((1, 0), 256),
     ((255, 255), (1 << 16) - 1),
 ])
-def test_dword_to_int(args, expected):
-    """Test the ``dword_to_int`` function."""
-    assert utils.dword_to_int(*args) == expected
+def test_dbyte_to_int(args, expected):
+    """Test the ``dbyte_to_int`` function."""
+    assert utils.dbyte_to_int(*args) == expected
 
 
 @pytest.mark.parametrize(('low_byte', 'high_byte'), [
@@ -50,9 +50,9 @@ def test_dword_to_int(args, expected):
     (0, -1),
     (-1, -1),
 ])
-def test_dword_to_int_validation(low_byte, high_byte):
+def test_dbyte_to_int_validation(low_byte, high_byte):
     with pytest.raises(ValueError):
-        utils.dword_to_int(low_byte, high_byte)
+        utils.dbyte_to_int(low_byte, high_byte)
 
 
 ### to_16bit_color ###
