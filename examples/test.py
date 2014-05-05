@@ -29,8 +29,12 @@ def demo_text(disp):
                          "But you give all you got, weighin' in at nineteen stone")
 
 
-#disp = display.Display('/dev/ttyUSB0', 9600)
-disp = display.Display('COM12', 115200)
+port='/dev/ttyUSB0'
+baud=9600
+if len(sys.argv) > 1: port=sys.argv[1]
+if len(sys.argv) > 2: baud=int(sys.argv[2])
+print("Opening port: ", port, " with baud: ", baud )
+disp = display.Display( port, baud )
 time.sleep(3)
 disp.cls()
 disp.set_orientation(1)
