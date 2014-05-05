@@ -1,9 +1,9 @@
+from picaso_lcd import display
+from picaso_lcd import colors
+
 import sys
-sys.path.insert(0, '..')
-import display
 import time
 import math
-import colors
 
 
 def demo_sine(disp):
@@ -15,11 +15,11 @@ def demo_sine(disp):
 
 
 def demo_text(disp):
-    disp.set_font_size(2)
-    disp.set_text_color(31 << 11)
-    disp.print_string("Whole Lotta Rosie\n")
-    disp.set_font_size(1)
-    disp.print_string("Wanna tell you a story\n'Bout a woman I know\nWhen it comes to lovin'"
+    disp.text.set_size(2)
+    disp.text.set_fg_color(31 << 11)
+    disp.text.put_string("Whole Lotta Rosie\n")
+    disp.text.set_size(1)
+    disp.text.put_string("Wanna tell you a story\n'Bout a woman I know\nWhen it comes to lovin'"
                          "\nOh, she steals the show\nShe ain't exactly pretty\nShe ain't exactly small\n"
                          "42-39-56\nYou could say she's got it all!\n\n"
                          "Never had a woman, never had a woman like you\n"
@@ -29,14 +29,19 @@ def demo_text(disp):
                          "But you give all you got, weighin' in at nineteen stone")
 
 
-disp = display.Display('/dev/ttyUSB0', 9600)
+port='/dev/ttyUSB0'
+baud=9600
+if len(sys.argv) > 1: port=sys.argv[1]
+if len(sys.argv) > 2: baud=int(sys.argv[2])
+print("Opening port: ", port, " with baud: ", baud )
+disp = display.Display( port, baud )
 time.sleep(3)
 disp.cls()
 disp.set_orientation(1)
 
 while True:
     demo_text(disp)
-    time.sleep(10)
+    time.sleep(3)
     disp.cls()
     demo_sine(disp)
 

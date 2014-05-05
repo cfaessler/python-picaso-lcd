@@ -15,6 +15,7 @@ Documentation can be found at [python-picaso-lcd.readthedocs.org](http://python-
 Testing
 -------
 
-Install [pytest](http://pytest.org/) with `pip`. Then run the tests:
+Just run:
 
-    $ py.test
+python -um examples.test
+

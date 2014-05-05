@@ -190,12 +190,12 @@ class Display(object):
         return response[0]
 
     def get_display_size(self):
-        # TODO: broken, fix.
-        x = self.write_cmd([0xffa6, 0], 2)
-        x_dbyte = map(ord, [x[0], x[1]])
-        y = self.write_cmd([0xffa6, 1], 2)
-        y_dbyte = map(ord, [y[0], y[1]])
-        return utils.dbyte_to_int(*x_dbyte), utils.dbyte_to_int(*y_dbyte)
+        x_dbyte = self.write_cmd([0xffa6, 0], 2)
+        y_dbyte = self.write_cmd([0xffa6, 1], 2)
+
+        width = utils.dbyte_to_int(*x_dbyte)+1
+        height = utils.dbyte_to_int(*y_dbyte)+1
+        return width, height
 
     def set_baudrate(self, index):
         self.write_cmd([0x0026, index])
